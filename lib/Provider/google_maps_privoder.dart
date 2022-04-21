@@ -39,7 +39,10 @@ class GoogleMapsController extends ChangeNotifier {
       markerId: const MarkerId('user_location'),
       position: _pos,
       icon: BitmapDescriptor.fromBytes(
-        await getBytesFromAsset('assets/person_location.png', 50),
+        await getBytesFromAsset(
+          'assets/person_location.png',
+          (MediaQuery.of(context).size.width * 0.3).toInt(),
+        ),
       ),
     );
 
@@ -73,7 +76,10 @@ class GoogleMapsController extends ChangeNotifier {
             ResponseBranchOffices.fromJson(res.body);
 
         for (var item in response.data) {
-          ui.Image img = await resizeAndConvertImage(item.brand.logo, 60);
+          ui.Image img = await resizeAndConvertImage(
+            item.brand.logo,
+            (MediaQuery.of(context).size.width * 0.25).toInt(),
+          );
 
           final branchOffices = await getAllBranchOfficesById(
             item.id,
