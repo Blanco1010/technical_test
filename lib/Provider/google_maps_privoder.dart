@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:google_maps/api/environment.dart';
 import 'dart:developer';
 import 'dart:io';
 import 'dart:ui' as ui;
@@ -16,28 +17,20 @@ import 'package:google_maps/models/response_branch_offices_by_latlng_model.dart'
 
 class GoogleMapsController extends ChangeNotifier {
   final Map<MarkerId, Marker> _markers = <MarkerId, Marker>{};
-
-  final String _url = 'us-central1-adomi-dev.cloudfunctions.net';
-
-  final String _token =
-      'Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJzdWIiOnsidXNlcl9pZCI6IjI5Nzk4NGIzLTQ1NDMtNDhmMC1hMTkxLTdlN2UwMWVjMWRjOCIsInVzZXJfdHlwZSI6IkFETUlOIiwicHVzaGVyX2NoYW5uZWwiOiJBRE1JTl8yOTc5ODRiMy00NTQzLTQ4ZjAtYTE5MS03ZTdlMDFlYzFkYzgifSwiaWF0IjoxNjQ0ODU5MjE3LCJleHAiOjE2NTQwNTk1OTl9.3ximsrIe4RlcXBDrVpoj7XlvhIJsLVpXEPXA42x6YeI';
-
-  final String _cityId = 'c1e4bcc9-eb84-4653-872c-e38f8de4bf79';
-
-  final LatLng _pos = const LatLng(4.545367057195659, -76.09435558319092);
-
-  final bool _coverageRadio = true;
+  final Map<String, ResponseBranchOfficesById> _branchOffices =
+      <String, ResponseBranchOfficesById>{};
 
   late BuildContext context;
 
   Map<MarkerId, Marker> get markers => _markers;
+  Map<String, ResponseBranchOfficesById> get branchOffices => _branchOffices;
 
   init(BuildContext context) async {
     this.context = context;
 
     final Marker marker = Marker(
       markerId: const MarkerId('user_location'),
-      position: _pos,
+      position: Environment.pos,
       icon: BitmapDescriptor.fromBytes(
         await getBytesFromAsset(
           'assets/person_location.png',
@@ -53,21 +46,21 @@ class GoogleMapsController extends ChangeNotifier {
   Future getAllBranchOfficesByLatLng(LatLng latLng) async {
     try {
       final queryParameters = {
-        'city_id': _cityId,
+        'city_id': Environment.cityId,
         'lat': '${latLng.latitude}',
         'lng': '${latLng.longitude}',
-        'coverage_radio': '$_coverageRadio',
+        'coverage_radio': Environment.coverageRadio.toString(),
       };
 
       final Uri url = Uri.http(
-        _url,
+        Environment.url,
         'core/api/v1/branch-offices',
         queryParameters,
       );
 
       Map<String, String> headers = {
         'Content-Type': 'application/json',
-        'Authorization': _token,
+        'Authorization': Environment.token,
       };
 
       final res = await http.get(url, headers: headers);
@@ -79,14 +72,6 @@ class GoogleMapsController extends ChangeNotifier {
           ui.Image img = await resizeAndConvertImage(
             item.brand.logo,
             (MediaQuery.of(context).size.width * 0.25).toInt(),
-          );
-
-          final branchOffices = await getAllBranchOfficesById(
-            item.id,
-            LatLng(
-              item.latitude,
-              item.latitude,
-            ),
           );
 
           final Marker marker = Marker(
@@ -101,7 +86,7 @@ class GoogleMapsController extends ChangeNotifier {
                         Animation<double> animation,
                         Animation<double> secondaryAnimation) {
                       return RestaurantDetailScreen(
-                        branchOffices: branchOffices,
+                        id: item.id,
                       );
                     },
                     transitionDuration: const Duration(milliseconds: 500),
@@ -131,6 +116,7 @@ class GoogleMapsController extends ChangeNotifier {
 
           _markers[MarkerId(item.id)] = marker;
         }
+        notifyListeners();
       }
     } catch (error) {
       log(error.toString());
@@ -145,24 +131,31 @@ class GoogleMapsController extends ChangeNotifier {
         'schedule': 'false',
         'lat': '${latLng.latitude}',
         'lng': '${latLng.longitude}',
-        'city_id': _cityId,
+        'city_id': Environment.cityId,
       };
 
       final Uri url = Uri.http(
-        _url,
+        Environment.url,
         'core/api/v1/branch-offices/$id',
         queryParameters,
       );
 
       Map<String, String> headers = {
         'Content-Type': 'application/json',
-        'Authorization': _token,
+        'Authorization': Environment.token,
       };
 
       final res = await http.get(url, headers: headers);
 
       if (res.statusCode == 200) {
-        return ResponseBranchOfficesById.fromJson(res.body);
+        ResponseBranchOfficesById response =
+            ResponseBranchOfficesById.fromJson(res.body);
+
+        if (_branchOffices[id] == null) {
+          _branchOffices[id] = response;
+        }
+
+        return response;
       } else {
         return ResponseBranchOfficesById(
           message: 'Error',

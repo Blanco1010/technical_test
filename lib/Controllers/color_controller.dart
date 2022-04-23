@@ -4,7 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:palette_generator/palette_generator.dart';
 
 class ColorAppBar with ChangeNotifier {
-  Color colorAppbar = Colors.green;
+  Color colorAppbar = Colors.white;
 
   getColorFromImg(String imageProvider) async {
     try {

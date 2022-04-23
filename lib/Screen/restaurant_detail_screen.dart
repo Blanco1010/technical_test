@@ -1,78 +1,98 @@
 import 'package:flutter/material.dart';
+import 'package:google_maps/api/environment.dart';
 import 'package:provider/provider.dart';
 
 import '../Controllers/color_controller.dart';
 import 'package:google_maps/models/response_branch_offices_by_id_model.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 
+import '../Provider/google_maps_privoder.dart';
 import '../Widgets/widgets.dart';
 
 class RestaurantDetailScreen extends StatelessWidget {
   const RestaurantDetailScreen({
     Key? key,
-    required this.branchOffices,
+    required this.id,
   }) : super(key: key);
 
-  final ResponseBranchOfficesById branchOffices;
+  final String id;
 
   @override
+  @override
   Widget build(BuildContext context) {
-    if (branchOffices.code == 200) {
-      return ChangeNotifierProvider(
-        create: ((context) => ColorAppBar()),
-        child: SafeArea(
-          child: Scaffold(
-            body: CustomScrollView(
-              physics: const BouncingScrollPhysics(),
-              slivers: [
-                SliverAppBarWidget(
-                  cover: branchOffices.data!.cover,
-                  title: branchOffices.data!.name,
-                ),
-                SliverList(
-                  delegate: SliverChildListDelegate(
-                    [
-                      _PosterAndTitle(
-                        title: branchOffices.data!.name,
-                        logo: branchOffices.data!.brand.logo,
-                        address: branchOffices.data!.address,
-                        isAvailable: branchOffices.data!.brand.isAvailable,
+    final googleMapsController = Provider.of<GoogleMapsController>(
+      context,
+      listen: false,
+    );
+
+    return googleMapsController.branchOffices[id] != null
+        ? _createInterfaceDescription(googleMapsController.branchOffices[id]!)
+        : FutureBuilder(
+            future: googleMapsController.getAllBranchOfficesById(
+              id,
+              Environment.pos,
+            ),
+            builder:
+                (context, AsyncSnapshot<ResponseBranchOfficesById> snapshot) {
+              if (snapshot.hasData) {
+                ResponseBranchOfficesById branchOffices = snapshot.data!;
+
+                return _createInterfaceDescription(branchOffices);
+              } else if (snapshot.error == true) {
+                return SafeArea(
+                  child: Scaffold(
+                    body: Center(
+                      child: Icon(
+                        Icons.warning,
+                        color: Colors.red,
+                        size: MediaQuery.of(context).size.width * 0.4,
                       ),
-                      _OverView(branchOffices: branchOffices.data!)
-                    ],
+                    ),
+                  ),
+                );
+              }
+              return const SafeArea(
+                child: Scaffold(
+                  body: Center(
+                    child: CircularProgressIndicator(),
                   ),
                 ),
-              ],
-            ),
-          ),
-        ),
-      );
-    } else {
-      return SafeArea(
-        child: Scaffold(
-          body: Center(
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              crossAxisAlignment: CrossAxisAlignment.center,
-              children: [
-                Icon(
-                  Icons.error_outline,
-                  size: MediaQuery.of(context).size.width * 0.8,
-                  color: Colors.red,
-                ),
-                const Text(
-                  'Hubo un error',
-                  style: TextStyle(
-                    fontSize: 25,
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ),
-      );
-    }
+              );
+            },
+          );
   }
+}
+
+Widget _createInterfaceDescription(ResponseBranchOfficesById branchOffices) {
+  return ChangeNotifierProvider(
+    create: ((context) => ColorAppBar()),
+    child: SafeArea(
+      child: Scaffold(
+        body: CustomScrollView(
+          physics: const BouncingScrollPhysics(),
+          slivers: [
+            SliverAppBarWidget(
+              cover: branchOffices.data!.cover,
+              title: branchOffices.data!.name,
+            ),
+            SliverList(
+              delegate: SliverChildListDelegate(
+                [
+                  _PosterAndTitle(
+                    title: branchOffices.data!.name,
+                    logo: branchOffices.data!.brand.logo,
+                    address: branchOffices.data!.address,
+                    isAvailable: branchOffices.data!.brand.isAvailable,
+                  ),
+                  _OverView(branchOffices: branchOffices.data!)
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    ),
+  );
 }
 
 class SliverAppBarWidget extends StatelessWidget {
