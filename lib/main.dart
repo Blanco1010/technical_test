@@ -1,10 +1,17 @@
 import 'package:flutter/material.dart';
-import 'package:google_maps/Provider/google_maps_privoder.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+
 import 'package:google_maps/Screen/google_map_screen.dart';
-import 'package:provider/provider.dart';
+
+import 'blocs/bloc/api_bloc_bloc.dart';
 
 void main() {
-  runApp(const MyApp());
+  runApp(
+    MultiBlocProvider(
+      providers: [BlocProvider(create: (context) => ApiBloc())],
+      child: const MyApp(),
+    ),
+  );
 }
 
 class MyApp extends StatelessWidget {
@@ -12,12 +19,9 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return ChangeNotifierProvider(
-      create: (context) => GoogleMapsController(),
-      child: const MaterialApp(
-        debugShowCheckedModeBanner: false,
-        home: GoogleMapsScreen(),
-      ),
+    return const MaterialApp(
+      debugShowCheckedModeBanner: false,
+      home: GoogleMapsScreen(),
     );
   }
 }

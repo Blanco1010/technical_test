@@ -1,9 +1,8 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:google_maps/blocs/bloc/api_bloc_bloc.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
-
-import 'package:provider/provider.dart';
-import '../Provider/google_maps_privoder.dart';
 
 import '../Widgets/widgets.dart';
 
@@ -17,34 +16,40 @@ class GoogleMapsScreen extends StatefulWidget {
 class GoogleMapsScreenState extends State<GoogleMapsScreen> {
   final Completer<GoogleMapController> _controller = Completer();
 
+  late ApiBloc apiBloc;
+
   final CameraPosition _positionCenter = const CameraPosition(
     target: LatLng(4.545367057195659, -76.09435558319092),
     zoom: 14.4746,
   );
 
-  //Marker
-
   @override
   Widget build(BuildContext context) {
-    final googleMapsController = Provider.of<GoogleMapsController>(context);
-    googleMapsController.init(context);
-
     return SafeArea(
       child: Scaffold(
-        body: GoogleMap(
-          markers: Set<Marker>.of(googleMapsController.markers.values),
-          zoomControlsEnabled: false,
-          mapType: MapType.normal,
-          initialCameraPosition: _positionCenter,
-          onMapCreated: (GoogleMapController controller) {
-            _controller.complete(controller);
-          },
+        body: BlocBuilder<ApiBloc, ApiBlocState>(
+          builder: ((context, state) {
+            if (state.location != null) {
+              return GoogleMap(
+                markers: Set<Marker>.of(state.markers.values),
+                zoomControlsEnabled: false,
+                mapType: MapType.normal,
+                initialCameraPosition: _positionCenter,
+                onMapCreated: (GoogleMapController controller) {
+                  _controller.complete(controller);
+                },
+              );
+            } else {
+              return const Center(child: Text('CARGANDO'));
+            }
+          }),
         ),
         floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
         floatingActionButton: FloatingActionButton(
           backgroundColor: Colors.green,
           onPressed: () {
-            _goToLocation();
+            apiBloc = BlocProvider.of<ApiBloc>(context);
+            apiBloc.start();
           },
           child: const Icon(
             Icons.location_on_sharp,
@@ -67,9 +72,7 @@ class GoogleMapsScreenState extends State<GoogleMapsScreen> {
                       icon: const Icon(Icons.search),
                       function: () {
                         print('Buscar');
-                        googleMapsController.getAllBranchOfficesByLatLng(
-                          const LatLng(4.545367057195659, -76.09435558319092),
-                        );
+                        apiBloc.getAllBranchOfficesByLatLng(context);
                       },
                     ),
                     ButtonWidget(
