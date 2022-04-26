@@ -2,14 +2,15 @@ part of 'api_bloc_bloc.dart';
 
 class ApiBlocState extends Equatable {
   final LatLng? location;
-  final Map<MarkerId, Marker> markers;
-  final Map<String, ResponseBranchOfficesById>? branchOffices;
+  final Map<MarkerId, Marker>? markers;
+  final Map<String, ResponseBranchOfficesById> branchOffices;
 
-  const ApiBlocState({
+  ApiBlocState({
     this.location,
-    this.branchOffices,
+    branchOffices,
     markers,
-  }) : markers = markers ?? const {};
+  })  : markers = markers ?? const {},
+        branchOffices = branchOffices ?? {};
 
   ApiBlocState copyWith({
     Map<MarkerId, Marker>? markers,

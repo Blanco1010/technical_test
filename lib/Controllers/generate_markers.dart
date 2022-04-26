@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 
+import '../Screen/restaurant_detail_screen.dart';
 import '../helper/helper.dart';
 import 'dart:ui' as ui;
 
@@ -31,10 +32,9 @@ class GenerateMarkerButton {
               PageRouteBuilder(
                 pageBuilder: (BuildContext context, Animation<double> animation,
                     Animation<double> secondaryAnimation) {
-                  // return RestaurantDetailScreen(
-                  //   id: item.id,
-                  // );
-                  return Container();
+                  return RestaurantDetailScreen(
+                    id: item.id,
+                  );
                 },
                 transitionDuration: const Duration(milliseconds: 500),
                 transitionsBuilder:

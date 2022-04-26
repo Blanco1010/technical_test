@@ -25,13 +25,15 @@ class GoogleMapsScreenState extends State<GoogleMapsScreen> {
 
   @override
   Widget build(BuildContext context) {
+    apiBloc = BlocProvider.of<ApiBloc>(context);
+    apiBloc.init(context);
     return SafeArea(
       child: Scaffold(
         body: BlocBuilder<ApiBloc, ApiBlocState>(
           builder: ((context, state) {
             if (state.location != null) {
               return GoogleMap(
-                markers: Set<Marker>.of(state.markers.values),
+                markers: Set<Marker>.of(state.markers!.values),
                 zoomControlsEnabled: false,
                 mapType: MapType.normal,
                 initialCameraPosition: _positionCenter,
@@ -48,8 +50,7 @@ class GoogleMapsScreenState extends State<GoogleMapsScreen> {
         floatingActionButton: FloatingActionButton(
           backgroundColor: Colors.green,
           onPressed: () {
-            apiBloc = BlocProvider.of<ApiBloc>(context);
-            apiBloc.start();
+            _goToLocation();
           },
           child: const Icon(
             Icons.location_on_sharp,

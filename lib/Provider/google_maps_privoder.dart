@@ -9,14 +9,6 @@ import 'package:google_maps/models/response_branch_offices_by_id_model.dart';
 import 'package:google_maps/models/response_branch_offices_by_latlng_model.dart';
 
 class ApiAdomiProvider {
-  // final Map<MarkerId, Marker> _markers = <MarkerId, Marker>{};
-
-  // final Map<String, ResponseBranchOfficesById> _branchOffices =
-  //     <String, ResponseBranchOfficesById>{};
-
-  // Map<MarkerId, Marker> get markers => _markers;
-  // Map<String, ResponseBranchOfficesById> get branchOffices => _branchOffices;
-
   Future getAllBranchOfficesByLatLng(LatLng latLng) async {
     try {
       final queryParameters = {
@@ -76,10 +68,6 @@ class ApiAdomiProvider {
       if (res.statusCode == 200) {
         ResponseBranchOfficesById response =
             ResponseBranchOfficesById.fromJson(res.body);
-
-        // if (_branchOffices[id] == null) {
-        //   _branchOffices[id] = response;
-        // }
 
         return response;
       } else {

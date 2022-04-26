@@ -20,33 +20,29 @@ class ApiBloc extends Bloc<ApiBlocEvent, ApiBlocState> {
   StreamSubscription<Position>? positionStream;
   final apiAdomi = ApiAdomiProvider();
 
-  ApiBloc() : super(const ApiBlocState()) {
-    on<ApiBlocEvent>(
+  ApiBloc() : super(ApiBlocState()) {
+    on<OnAddLocationEvent>((event, emit) =>
+        emit(state.copyWith(location: event.latLng, markers: event.markers)));
+
+    on<OnNewUserLocationEvent>(
+        (event, emit) => emit(state.copyWith(location: event.newUserLatLng)));
+
+    on<OnLoadingByLatLngEvent>(
       (event, emit) {
-        on<OnAddLocationEvent>((event, emit) => emit(
-            state.copyWith(location: event.latLng, markers: event.markers)));
+        Map<MarkerId, Marker> _markers = event.markers;
 
-        on<OnNewUserLocationEvent>((event, emit) =>
-            emit(state.copyWith(location: event.newUserLatLng)));
-
-        on<OnLoadingByLatLngEvent>(
-          (event, emit) {
-            Map<MarkerId, Marker>? _markers = event.markers;
-            _markers.addAll({
-              const MarkerId('user_location'): state.markers['user_location']!,
-            });
-            state.copyWith(
-              markers: _markers,
-            );
-          },
-        );
-
-        on<OnLoadingById>(
-          (event, emit) => state.copyWith(
-            branchOffices: event.branchOffices,
-          ),
-        );
+        Marker _mark = state.markers![const MarkerId('user_location')]!;
+        _markers[const MarkerId('user_location')] = _mark;
+        emit(state.copyWith(
+          markers: _markers,
+        ));
       },
+    );
+
+    on<OnLoadingById>(
+      (event, emit) => state.copyWith(
+        branchOffices: event.branchOffices,
+      ),
     );
   }
 
@@ -67,7 +63,7 @@ class ApiBloc extends Bloc<ApiBlocEvent, ApiBlocState> {
     Map<MarkerId, Marker>? _markers = {};
     _markers[const MarkerId('user_location')] = marker;
 
-    _markers.addAll(state.markers);
+    _markers.addAll(state.markers!);
 
     add(OnAddLocationEvent(_pos, _markers));
   }
@@ -77,23 +73,18 @@ class ApiBloc extends Bloc<ApiBlocEvent, ApiBlocState> {
         await apiAdomi.getAllBranchOfficesByLatLng(state.location!);
 
     final _generate = GenerateMarkerButton(context, response);
-
-    add(OnLoadingByLatLngEvent(await _generate.generate()));
+    final _markes = await _generate.generate();
+    add(OnLoadingByLatLngEvent(_markes));
   }
 
-  void start() {
-    const LatLng _pos = LatLng(4.545367057195659, -76.09435558319092);
-    add(const OnNewUserLocationEvent(_pos));
+  Future<ResponseBranchOfficesById>? getAllBranchOfficesByBy(String id) async {
+    final ResponseBranchOfficesById response =
+        await apiAdomi.getAllBranchOfficesById(id, state.location!);
+
+    if (state.branchOffices[id] == null) {
+      state.branchOffices[id] = response;
+      add(OnLoadingById(state.branchOffices));
+    }
+    return response;
   }
-
-  // Future<void> close() {
-  //   stopFollowingUser();
-  //   return super.close();
-  // }
-
-  // void stopFollowingUser() {
-  //   positionStream?.cancel();
-
-  //   print('stopFollowingUser');
-  // }
 }
