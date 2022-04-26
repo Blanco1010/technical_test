@@ -21,32 +21,28 @@ class ApiBloc extends Bloc<ApiBlocEvent, ApiBlocState> {
   final apiAdomi = ApiAdomiProvider();
 
   ApiBloc() : super(const ApiBlocState()) {
-    on<ApiBlocEvent>(
+    on<OnAddLocationEvent>((event, emit) =>
+        emit(state.copyWith(location: event.latLng, markers: event.markers)));
+
+    on<OnNewUserLocationEvent>(
+        (event, emit) => emit(state.copyWith(location: event.newUserLatLng)));
+
+    on<OnLoadingByLatLngEvent>(
       (event, emit) {
-        on<OnAddLocationEvent>((event, emit) => emit(
-            state.copyWith(location: event.latLng, markers: event.markers)));
-
-        on<OnNewUserLocationEvent>((event, emit) =>
-            emit(state.copyWith(location: event.newUserLatLng)));
-
-        on<OnLoadingByLatLngEvent>(
-          (event, emit) {
-            Map<MarkerId, Marker>? _markers = event.markers;
-            _markers.addAll({
-              const MarkerId('user_location'): state.markers['user_location']!,
-            });
-            state.copyWith(
-              markers: _markers,
-            );
-          },
-        );
-
-        on<OnLoadingById>(
-          (event, emit) => state.copyWith(
-            branchOffices: event.branchOffices,
-          ),
+        Map<MarkerId, Marker>? _markers = event.markers;
+        _markers.addAll({
+          const MarkerId('user_location'): state.markers['user_location']!,
+        });
+        state.copyWith(
+          markers: _markers,
         );
       },
+    );
+
+    on<OnLoadingById>(
+      (event, emit) => state.copyWith(
+        branchOffices: event.branchOffices,
+      ),
     );
   }
 
